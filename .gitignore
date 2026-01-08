@@ -1,0 +1,6 @@
+db/data
+.env
+.development.env
+.production.env
+.vscode/
+node_modules/

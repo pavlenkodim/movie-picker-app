@@ -1,0 +1,20 @@
+# Use postgres/example user/password credentials
+
+services:
+  movie-picker-db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: movie_picker_db
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080

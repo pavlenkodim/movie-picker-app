@@ -3,7 +3,7 @@ import { AppModule } from "./app.module";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { JwtAuthGuard } from "./auth/jwt-auth.guard";
 
-async function start() {
+async function bootstrap() {
   const PORT = process.env.PORT || 3000;
 
   const app = await NestFactory.create(AppModule);
@@ -28,4 +28,4 @@ async function start() {
   await app.listen(PORT, () => console.log(`Server started on port = ${PORT}`));
 }
 
-start();
+bootstrap();

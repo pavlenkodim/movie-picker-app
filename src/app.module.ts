@@ -10,11 +10,13 @@ import { RolesModule } from "./roles/roles.module";
 import { User } from "./users/users.model";
 import { Role } from "./roles/roles.model";
 import { UserRoles } from "./roles/user-roles.model";
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from "./auth/auth.module";
+import { APP_GUARD } from "@nestjs/core";
+import { JwtAuthGuard } from "./auth/jwt-auth.guard";
 
 @Module({
   controllers: [],
-  providers: [],
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
   imports: [
     ConfigModule.forRoot({
       envFilePath: `.${process.env.NODE_ENV}.env`,
@@ -28,6 +30,13 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.POSTGRES_DB,
       models: [User, Role, UserRoles],
       autoLoadModels: true,
+      ssl: true,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
     }),
     UsersModule,
     RolesModule,

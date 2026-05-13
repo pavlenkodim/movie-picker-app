@@ -12,11 +12,18 @@ async function start() {
     .setTitle("Movie Picker App")
     .setDescription("The Movie Picker App API description")
     .setVersion("0.1.0")
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+      "JWT",
+    )
     .build();
 
   const document = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("/api/docs", app, document);
-  // app.useGlobalGuards(JwtAuthGuard);
 
   await app.listen(PORT, () => console.log(`Server started on port = ${PORT}`));
 }

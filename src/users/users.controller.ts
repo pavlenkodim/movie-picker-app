@@ -10,7 +10,7 @@ import {
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UsersService } from "./users.service";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { User } from "./users.model";
 import { Roles } from "src/auth/roles-auth.decorator";
 import { RolesGuard } from "src/auth/roles.guard";
@@ -22,23 +22,26 @@ import { BanUserDto } from "./dto/ban-user.dto";
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  @ApiOperation({ summary: "Create new user" })
-  @ApiResponse({ status: 200, type: User })
-  @UsePipes(ValidationPipe)
-  @Post()
-  create(@Body() userDto: CreateUserDto) {
-    return this.usersService.createUser(userDto);
-  }
+  // @ApiBearerAuth("JWT")
+  // @ApiOperation({ summary: "Create new user" })
+  // @ApiResponse({ status: 200, type: User })
+  // @UsePipes(ValidationPipe)
+  // @Post()
+  // create(@Body() userDto: CreateUserDto) {
+  //   return this.usersService.createUser(userDto);
+  // }
 
+  @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Get all users" })
   @ApiResponse({ status: 200, type: [User] })
-  @Roles("ADMIN")
-  @UseGuards(RolesGuard)
+  // @Roles("ADMIN")
+  // @UseGuards(RolesGuard)
   @Get()
   getAll() {
     return this.usersService.getAllUsers();
   }
 
+  @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Get user by email" })
   @ApiResponse({ status: 200, type: User })
   @Get(":email")
@@ -46,19 +49,21 @@ export class UsersController {
     return this.usersService.getUserByEmail(email);
   }
 
+  @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Add role to user" })
   @ApiResponse({ status: 200, type: [User] })
-  @Roles("ADMIN")
-  @UseGuards(RolesGuard)
+  // @Roles("ADMIN")
+  // @UseGuards(RolesGuard)
   @Post("/role")
   addRole(@Body() dto: AddRoleDto) {
     return this.usersService.addRole(dto);
   }
 
+  @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Ban to user" })
   @ApiResponse({ status: 200, type: [User] })
-  @Roles("ADMIN")
-  @UseGuards(RolesGuard)
+  // @Roles("ADMIN")
+  // @UseGuards(RolesGuard)
   @Post("/ban")
   ban(@Body() dto: BanUserDto) {
     return this.usersService.ban(dto);

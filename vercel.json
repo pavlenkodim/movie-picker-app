@@ -15,8 +15,7 @@
   "functions": {
     "dist/main.js": {
       "memory": 1024,
-      "maxDuration": 30,
-      "external": ["pg", "pg-hstore"]
+      "maxDuration": 30
     }
   }
 }

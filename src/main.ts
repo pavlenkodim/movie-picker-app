@@ -7,6 +7,15 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
+  app.setGlobalPrefix("api");
+
+  app.enableCors({
+    origin: ["http://localhost:3000", "*"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle("Movie Picker App")
     .setDescription("The Movie Picker App API description")

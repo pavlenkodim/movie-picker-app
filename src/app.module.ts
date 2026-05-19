@@ -13,6 +13,8 @@ import { UserRoles } from "./roles/user-roles.model";
 import { AuthModule } from "./auth/auth.module";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./auth/jwt-auth.guard";
+import { ProfilesModule } from "./profiles/profiles.module";
+import { Profile } from "./profiles/profiles.model";
 
 @Module({
   controllers: [],
@@ -28,7 +30,7 @@ import { JwtAuthGuard } from "./auth/jwt-auth.guard";
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      models: [User, Role, UserRoles],
+      models: [User, Role, UserRoles, Profile],
       autoLoadModels: true,
       ssl: true,
       dialectOptions: {
@@ -41,6 +43,7 @@ import { JwtAuthGuard } from "./auth/jwt-auth.guard";
     UsersModule,
     RolesModule,
     AuthModule,
+    ProfilesModule,
   ],
 })
 export class AppModule {}

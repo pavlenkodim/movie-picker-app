@@ -34,11 +34,19 @@ export class UsersController {
   @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Get all users" })
   @ApiResponse({ status: 200, type: [User] })
-  // @Roles("ADMIN")
-  // @UseGuards(RolesGuard)
+  @Roles("ADMIN")
+  @UseGuards(RolesGuard)
   @Get()
   getAll() {
     return this.usersService.getAllUsers();
+  }
+
+  @ApiBearerAuth("JWT")
+  @ApiOperation({ summary: "Get user by ID" })
+  @ApiResponse({ status: 200, type: User })
+  @Get(":id")
+  getUserById(@Param("id") id: number) {
+    return this.usersService.getUserById(id);
   }
 
   @ApiBearerAuth("JWT")
@@ -52,8 +60,8 @@ export class UsersController {
   @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Add role to user" })
   @ApiResponse({ status: 200, type: [User] })
-  // @Roles("ADMIN")
-  // @UseGuards(RolesGuard)
+  @Roles("ADMIN")
+  @UseGuards(RolesGuard)
   @Post("/role")
   addRole(@Body() dto: AddRoleDto) {
     return this.usersService.addRole(dto);
@@ -62,8 +70,8 @@ export class UsersController {
   @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Ban to user" })
   @ApiResponse({ status: 200, type: [User] })
-  // @Roles("ADMIN")
-  // @UseGuards(RolesGuard)
+  @Roles("ADMIN")
+  @UseGuards(RolesGuard)
   @Post("/ban")
   ban(@Body() dto: BanUserDto) {
     return this.usersService.ban(dto);

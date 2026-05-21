@@ -4,12 +4,14 @@ import * as bcrypt from "bcryptjs";
 import { CreateUserDto } from "../users/dto/create-user.dto";
 import { User } from "../users/users.model";
 import { UsersService } from "../users/users.service";
+import { RolesService } from "src/roles/roles.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
     private jwtService: JwtService,
+    private rolesService: RolesService,
   ) {}
 
   async login(userDto: CreateUserDto) {
@@ -26,6 +28,12 @@ export class AuthService {
 
     const hashPassword = await bcrypt.hash(userDto.password, 5);
     const user = await this.userService.createUser({ ...userDto, password: hashPassword });
+
+    const userRole = await this.rolesService.getRoleByValue("USER");
+    // TODO: refactor this because of "magic number"
+    await user.$add("roles", userRole?.id ?? 2);
+    user.roles = await user.$get("roles");
+
     return this.generateToken(user);
   }
 
@@ -33,6 +41,11 @@ export class AuthService {
     const payload = { email: user.email, id: user.id, roles: user.roles };
     return {
       token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        roles: user.roles,
+      },
     };
   }
 

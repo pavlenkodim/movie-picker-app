@@ -64,6 +64,7 @@ export class AuthService {
     }
     const passwordEquals = await bcrypt.compare(userDto.password, user?.password);
     if (user && passwordEquals) {
+      user.roles = await user.$get("roles");
       return user;
     }
     throw new UnauthorizedException({ message: "Incorrect email or password" });

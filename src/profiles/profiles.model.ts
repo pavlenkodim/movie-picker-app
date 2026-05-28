@@ -37,7 +37,7 @@ export class Profile extends Model<Profile, ProfileCreationAttrs> {
 
   @ApiProperty({
     example: "https://localhost:3000/thumbnail.jpg",
-    description: "Profile thumbnail image",
+    description: "Profile thumbnail image url",
   })
   @Column({
     type: DataType.STRING,

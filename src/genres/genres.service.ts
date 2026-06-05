@@ -8,8 +8,14 @@ import { Genre } from "./genres.model";
 export class GenresService {
   constructor(@InjectModel(Genre) private genreRepository: typeof Genre) {}
   async getGenresFromTMDB() {
-    const { genres } = await tmdbApiService<{ genres: GenreDto[] }>("genre/movie/list");
-    if (genres?.length) {
+    const { genres: movieGenres } = await tmdbApiService<{ genres: GenreDto[] }>(
+      "genre/movie/list",
+    );
+    const { genres: tvGenres } = await tmdbApiService<{ genres: GenreDto[] }>("genre/tv/list");
+    if (movieGenres?.length && tvGenres?.length) {
+      const genres = Array.from(
+        new Map([...movieGenres, ...tvGenres].map((genre) => [genre.id, genre])).values(),
+      );
       await this.genreRepository.bulkCreate(genres, {
         updateOnDuplicate: ["id"],
       });

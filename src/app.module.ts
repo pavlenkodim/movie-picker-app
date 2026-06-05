@@ -15,12 +15,14 @@ import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./auth/jwt-auth.guard";
 import { ProfilesModule } from "./profiles/profiles.module";
 import { Profile } from "./profiles/profiles.model";
+import { GenresModule } from "./genres/genres.module";
 
 @Module({
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       envFilePath: `.${process.env.NODE_ENV}.env`,
     }),
     SequelizeModule.forRoot({
@@ -44,6 +46,7 @@ import { Profile } from "./profiles/profiles.model";
     RolesModule,
     AuthModule,
     ProfilesModule,
+    GenresModule,
   ],
 })
 export class AppModule {}

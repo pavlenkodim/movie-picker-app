@@ -5,8 +5,8 @@ import { SequelizeModule } from "@nestjs/sequelize";
 import { User } from "src/users/users.model";
 import { AuthModule } from "src/auth/auth.module";
 import { Profile } from "./profiles.model";
-import { UsersService } from "src/users/users.service";
 import { UsersModule } from "src/users/users.module";
+import { S3Module } from "src/s3/s3.module";
 
 @Module({
   providers: [ProfilesService],
@@ -15,6 +15,7 @@ import { UsersModule } from "src/users/users.module";
     SequelizeModule.forFeature([Profile, User]),
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
+    forwardRef(() => S3Module),
   ],
   exports: [ProfilesService],
 })

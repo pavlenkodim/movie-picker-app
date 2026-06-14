@@ -10,9 +10,4 @@ export class CreateProfileDto {
   @IsString({ message: "Nickname must be a string." })
   @Length(3, 80, { message: "Nickname length must be between 3 and 80 characters." })
   readonly nickname: string;
-
-  @ApiProperty({ example: "https://example.com/thumbnail.jpg", description: "Profile thumbnail" })
-  @IsOptional()
-  @IsString({ message: "Thumbnail must be a string." })
-  readonly thumbnail?: string;
 }

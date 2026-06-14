@@ -16,6 +16,7 @@ import { JwtAuthGuard } from "./auth/jwt-auth.guard";
 import { ProfilesModule } from "./profiles/profiles.module";
 import { Profile } from "./profiles/profiles.model";
 import { GenresModule } from "./genres/genres.module";
+import { S3Module } from './s3/s3.module';
 
 @Module({
   controllers: [],
@@ -47,6 +48,7 @@ import { GenresModule } from "./genres/genres.module";
     AuthModule,
     ProfilesModule,
     GenresModule,
+    S3Module,
   ],
 })
 export class AppModule {}

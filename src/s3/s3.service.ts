@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { Upload } from "@aws-sdk/lib-storage";
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { extname } from "path";
-import { UUIDV4 } from "sequelize";
+import { v4 as uuidv4 } from "uuid";
 import MulterFile from "./types/multer-file.type";
 
 @Injectable()
@@ -26,7 +26,7 @@ export class S3Service {
   }
 
   async uploadFile(file: MulterFile, folder = "thumbnails"): Promise<string> {
-    const key = `${folder}/${UUIDV4()}${extname(file.originalname)}`;
+    const key = `${folder}/${uuidv4()}${extname(file.originalname)}`;
 
     const upload = new Upload({
       client: this.client,

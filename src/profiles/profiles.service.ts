@@ -5,6 +5,7 @@ import { CreateProfileDto } from "./dto/crate-profile.dto";
 import { UsersService } from "src/users/users.service";
 import MulterFile from "src/s3/types/multer-file.type";
 import { S3Service } from "src/s3/s3.service";
+import { validateProfileThumbnail } from "./helpers";
 
 @Injectable()
 export class ProfilesService {
@@ -35,7 +36,11 @@ export class ProfilesService {
     if (!user) {
       throw new NotFoundException("User not found");
     }
-    const thumbnail = file ? await this.s3Service.uploadFile(file) : undefined;
+    let thumbnail: string | undefined;
+    if (file) {
+      validateProfileThumbnail(file);
+      thumbnail = await this.s3Service.uploadFile(file);
+    }
 
     const profile = await this.profileRepository.create({ ...dto, thumbnail });
     return profile;
@@ -48,13 +53,20 @@ export class ProfilesService {
     }
 
     if (file) {
+      validateProfileThumbnail(file);
       if (profile.thumbnail) {
         await this.s3Service.deleteFile(profile.thumbnail);
       }
       const thumbnail = await this.s3Service.uploadFile(file);
-      await profile.update({ ...dto, thumbnail });
+      if (dto.nickname) {
+        await profile.update({ ...dto, thumbnail });
+      } else {
+        await profile.update({ thumbnail });
+      }
     } else {
-      await profile.update(dto);
+      if (dto.nickname) {
+        await profile.update(dto);
+      }
     }
 
     return profile;

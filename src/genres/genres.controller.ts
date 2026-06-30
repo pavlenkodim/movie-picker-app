@@ -5,7 +5,7 @@ import { Roles } from "src/auth/roles-auth.decorator";
 import { RolesGuard } from "src/auth/roles.guard";
 import { Genre } from "./genres.model";
 
-ApiTags("Genres");
+@ApiTags("Genres")
 @Controller("genres")
 export class GenresController {
   constructor(private genreService: GenresService) {}
@@ -18,6 +18,16 @@ export class GenresController {
   @Get("/set")
   setFromTMDB() {
     return this.genreService.getGenresFromTMDB();
+  }
+
+  @ApiBearerAuth("JWT")
+  @ApiOperation({ summary: "Truncate and resync all genres from TMDB" })
+  @ApiResponse({ status: 200, type: [Genre] })
+  @Roles("ADMIN")
+  @UseGuards(RolesGuard)
+  @Get("/resync")
+  resync() {
+    return this.genreService.resyncGenres();
   }
 
   @ApiBearerAuth("JWT")

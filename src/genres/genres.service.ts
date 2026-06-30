@@ -8,21 +8,22 @@ import { Genre } from "./genres.model";
 export class GenresService {
   constructor(@InjectModel(Genre) private genreRepository: typeof Genre) {}
   async getGenresFromTMDB() {
-    const { genres: movieGenres } = await tmdbApiService<{ genres: GenreDto[] }>(
-      "genre/movie/list",
-    );
-    const { genres: tvGenres } = await tmdbApiService<{ genres: GenreDto[] }>("genre/tv/list");
-    if (movieGenres?.length && tvGenres?.length) {
-      const genres = Array.from(
-        new Map([...movieGenres, ...tvGenres].map((genre) => [genre.id, genre])).values(),
-      );
-      await this.genreRepository.bulkCreate(genres, {
-        updateOnDuplicate: ["id"],
-      });
+    const { genres } = await tmdbApiService<{ genres: GenreDto[] }>("genre/movie/list");
 
-      return genres;
+    if (!genres?.length) {
+      throw new HttpException("Failed to request genres from TMDB", HttpStatus.SERVICE_UNAVAILABLE);
     }
-    throw new HttpException("Failed to request genres from TMDB", HttpStatus.SERVICE_UNAVAILABLE);
+
+    await this.genreRepository.bulkCreate(genres, {
+      updateOnDuplicate: ["name"],
+    });
+
+    return genres;
+  }
+
+  async resyncGenres() {
+    await this.genreRepository.destroy({ where: {}, truncate: true });
+    return this.getGenresFromTMDB();
   }
 
   async getAllGenres() {

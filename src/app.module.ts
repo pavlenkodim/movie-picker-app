@@ -17,6 +17,8 @@ import { ProfilesModule } from "./profiles/profiles.module";
 import { Profile } from "./profiles/profiles.model";
 import { GenresModule } from "./genres/genres.module";
 import { S3Module } from "./s3/s3.module";
+import { MoviesModule } from "./movies/movies.module";
+import { GenreWeightsModule } from './genre-weights/genre-weights.module';
 
 @Module({
   controllers: [],
@@ -49,6 +51,8 @@ import { S3Module } from "./s3/s3.module";
     ProfilesModule,
     GenresModule,
     S3Module,
+    MoviesModule,
+    GenreWeightsModule,
   ],
 })
 export class AppModule {}

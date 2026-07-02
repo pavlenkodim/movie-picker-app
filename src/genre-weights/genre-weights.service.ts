@@ -38,17 +38,25 @@ export class GenreWeightsService {
     });
   }
 
+  // TODO: Check this function
   async applySwipeUpdate(profileId: number, genreIds: number[], liked: boolean) {
     const target = liked ? 1 : 0;
 
-    for (const genreId of genreIds) {
-      const [row] = await this.genreWeightRepository.findOrCreate({
-        where: { profileId, genreId },
-        defaults: { profileId, genreId, weight: INITIAL_WEIGHT },
-      });
+    await Promise.all(
+      genreIds.map(async (genreId) => {
+        await this.genreWeightRepository.bulkCreate([{ profileId, genreId, weight: 0 }], {
+          ignoreDuplicates: true,
+        });
 
-      const newWeight = row.weight + LEARNING_RATE * (target - row.weight);
-      await row.update({ weight: newWeight });
-    }
+        await this.genreWeightRepository.update(
+          {
+            weight: this.genreWeightRepository.sequelize?.literal(
+              `weight + ${LEARNING_RATE} * (${target} - weight)`,
+            ) as unknown as number,
+          },
+          { where: { profileId, genreId } },
+        );
+      }),
+    );
   }
 }

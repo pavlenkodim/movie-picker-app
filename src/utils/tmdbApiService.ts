@@ -1,16 +1,15 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 
-interface ApiResponse<T> {
-  data: T;
-}
-
 interface ErrorsFromTMBD {
   status_code: number;
   status_message: string;
   success: boolean;
 }
 
-export default async function tmdbApiService<T>(url: string): Promise<T> {
+export default async function tmdbApiService<T>(
+  url: string,
+  params?: Record<string, string | number | boolean>,
+): Promise<T> {
   const baseUrl = process.env.TMDB_API_URL ?? "https://api.themoviedb.org/3";
   const token = process.env.TMDB_READ_ACCESS_TOKEN;
 
@@ -21,32 +20,31 @@ export default async function tmdbApiService<T>(url: string): Promise<T> {
     );
   }
 
-  const options = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      Authorization: `Bearer ${process.env.TMDB_READ_ACCESS_TOKEN}`,
-    },
-  };
+  const queryString = params
+    ? "?" + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString()
+    : "";
 
   try {
-    console.log("url:", `${baseUrl}/${url}`);
-    console.log("options", options);
-    const response = await fetch(`${baseUrl}/${url}`, options);
+    console.log("url:", `${baseUrl}/${url}${queryString}`);
+
+    const response = await fetch(`${baseUrl}/${url}${queryString}`, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
     const data: T = await response.json();
-    console.log(data);
+    console.log("TMDB data", data);
 
     if (!response.ok) {
-      const error: ErrorsFromTMBD = await response.json();
+      const error = data as ErrorsFromTMBD;
       throw new HttpException(error.status_message ?? "TMDB request failed", response.status);
     }
 
-    return data;
+    return data as T;
   } catch (error) {
     console.error(error);
-    throw new HttpException(
-      `Service unavailable: ${error?.message}`,
-      HttpStatus.SERVICE_UNAVAILABLE,
-    );
+    throw new HttpException(`Service unavailable: ${error}`, HttpStatus.SERVICE_UNAVAILABLE);
   }
 }

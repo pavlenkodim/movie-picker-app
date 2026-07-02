@@ -18,7 +18,9 @@ import { Profile } from "./profiles/profiles.model";
 import { GenresModule } from "./genres/genres.module";
 import { S3Module } from "./s3/s3.module";
 import { MoviesModule } from "./movies/movies.module";
-import { GenreWeightsModule } from './genre-weights/genre-weights.module';
+import { GenreWeightsModule } from "./genre-weights/genre-weights.module";
+import { SwipesModule } from "./swipes/swipes.module";
+import { RecommendationsModule } from "./recommendations/recommendations.module";
 
 @Module({
   controllers: [],
@@ -53,6 +55,8 @@ import { GenreWeightsModule } from './genre-weights/genre-weights.module';
     S3Module,
     MoviesModule,
     GenreWeightsModule,
+    SwipesModule,
+    RecommendationsModule,
   ],
 })
 export class AppModule {}

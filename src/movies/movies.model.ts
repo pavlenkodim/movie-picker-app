@@ -6,12 +6,12 @@ import { MovieGenres } from "./movie-genres.model";
 interface MovieCreationAttrs {
   id: number;
   title: string;
-  overview?: string;
-  posterPath?: string;
+  overview?: string | null;
+  posterPath?: string | null;
   voteAverage: number;
   voteCount: number;
   popularity: number;
-  releaseDate?: string;
+  releaseDate?: string | null;
 }
 
 @Table({ tableName: "movies" })
@@ -34,7 +34,7 @@ export class Movie extends Model<Movie, MovieCreationAttrs> {
     description: "Shor overview",
   })
   @Column({ type: DataType.TEXT, allowNull: true })
-  declare overview?: string;
+  declare overview?: string | null;
 
   @ApiProperty({ example: "/ngl2FKBlU4fhbdsrtdom9LVLBXw.jpg", description: "Url to movie poster" })
   @Column({ type: DataType.STRING, allowNull: true })
@@ -54,7 +54,7 @@ export class Movie extends Model<Movie, MovieCreationAttrs> {
 
   @ApiProperty({ example: "2023-02-15", description: "Release date" })
   @Column({ type: DataType.DATEONLY, allowNull: true })
-  declare releaseDate?: string;
+  declare releaseDate?: string | null;
 
   @BelongsToMany(() => Genre, () => MovieGenres)
   genres: Genre[];

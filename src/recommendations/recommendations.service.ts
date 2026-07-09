@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { GenreWeightsService } from "src/genre-weights/genre-weights.service";
 import { MoviesService } from "src/movies/movies.service";
 import { SwipesService } from "src/swipes/swipes.service";
@@ -14,6 +14,12 @@ export class RecommendationsService {
   ) {}
 
   async getRecommendations(profileId: number) {
+    if (!profileId) {
+      throw new HttpException(
+        "You need to create a profile or refresh your token",
+        HttpStatus.FORBIDDEN,
+      );
+    }
     const topGenres = await this.genreWeightsService.getTopGenres(profileId, TOP_GENRES_LIMIT);
 
     if (!topGenres.length) return [];

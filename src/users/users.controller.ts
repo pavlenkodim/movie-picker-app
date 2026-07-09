@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -42,8 +43,18 @@ export class UsersController {
   }
 
   @ApiBearerAuth("JWT")
+  @ApiOperation({ summary: "Get my user" })
+  @ApiResponse({ status: 200, type: User })
+  @Get("me")
+  getUserMe(@Req() req) {
+    return this.usersService.getUserById(req.user.id);
+  }
+
+  @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Get user by ID" })
   @ApiResponse({ status: 200, type: User })
+  @Roles("ADMIN")
+  @UseGuards(RolesGuard)
   @Get(":id")
   getUserById(@Param("id") id: number) {
     return this.usersService.getUserById(id);
@@ -52,6 +63,8 @@ export class UsersController {
   @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Get user by email" })
   @ApiResponse({ status: 200, type: User })
+  @Roles("ADMIN")
+  @UseGuards(RolesGuard)
   @Get(":email")
   getUserByEmail(@Param("email") email: string) {
     return this.usersService.getUserByEmail(email);

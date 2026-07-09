@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -32,7 +33,16 @@ export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
   @ApiBearerAuth("JWT")
+  @ApiOperation({ summary: "Get my profile" })
+  @ApiResponse({ status: 200, type: Profile })
+  @Get("me")
+  getMy(@Req() req) {
+    return this.profilesService.getProfileByUserId(req.user.id);
+  }
+
+  @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Get profile by user ID" })
+  @Roles("ADMIN")
   @ApiResponse({ status: 200, type: Profile })
   @Get(":userId")
   getByUserId(@Param("userId") userId: number) {
@@ -58,38 +68,32 @@ export class ProfilesController {
     schema: {
       type: "object",
       properties: {
-        userId: { type: "number" },
         nickname: { type: "string" },
         thumbnail: { type: "string", format: "binary" },
       },
     },
   })
   @UseInterceptors(FileInterceptor("thumbnail", { storage: memoryStorage() }))
-  create(@Body() profileDto: CreateProfileDto, @UploadedFile() file?: MulterFile) {
-    return this.profilesService.createProfile(profileDto, file);
+  create(@Req() req, @Body() profileDto: CreateProfileDto, @UploadedFile() file?: MulterFile) {
+    return this.profilesService.createProfile(req.user.id, profileDto, file);
   }
 
   @ApiBearerAuth("JWT")
   @ApiOperation({ summary: "Update profile" })
   @ApiResponse({ status: 200, type: Profile })
-  @Patch(":userId")
+  @Patch()
   @ApiConsumes("multipart/form-data")
   @ApiBody({
     schema: {
       type: "object",
       properties: {
-        userId: { type: "number" },
         nickname: { type: "string" },
         thumbnail: { type: "string", format: "binary" },
       },
     },
   })
   @UseInterceptors(FileInterceptor("thumbnail", { storage: memoryStorage() }))
-  update(
-    @Param("userId") userId: number,
-    @Body() updateDto: CreateProfileDto,
-    @UploadedFile() file?: MulterFile,
-  ) {
-    return this.profilesService.updateProfile(userId, updateDto, file);
+  update(@Req() req, @Body() updateDto: CreateProfileDto, @UploadedFile() file?: MulterFile) {
+    return this.profilesService.updateProfile(req.user.id, updateDto, file);
   }
 }

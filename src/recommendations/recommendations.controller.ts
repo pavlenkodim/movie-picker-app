@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
+import { Controller, Get, Req } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { RecommendationsService } from "./recommendations.service";
 
@@ -9,8 +9,8 @@ export class RecommendationsController {
   constructor(private recommendationsService: RecommendationsService) {}
 
   @ApiOperation({ summary: "Get movie recommendations for profile" })
-  @Get(":profileId")
-  getRecommendations(@Param("profileId", ParseIntPipe) profileId: number) {
-    return this.recommendationsService.getRecommendations(profileId);
+  @Get()
+  getRecommendations(@Req() req) {
+    return this.recommendationsService.getRecommendations(req.user.profileId);
   }
 }

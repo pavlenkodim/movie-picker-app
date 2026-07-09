@@ -24,6 +24,7 @@ export class Profile extends Model<Profile, ProfileCreationAttrs> {
   @ApiProperty({ example: 1, description: "Unique user ID" })
   @Column({
     type: DataType.INTEGER,
+    unique: true,
     allowNull: false,
   })
   declare userId: number;

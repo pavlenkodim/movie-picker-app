@@ -16,7 +16,7 @@ export class AuthService {
 
   async login(userDto: CreateUserDto) {
     const user = await this.validateUser(userDto);
-    return this.generateToken(user);
+    return this.generateToken(user, user.profile?.id);
   }
 
   async registration(userDto: CreateUserDto) {
@@ -37,10 +37,11 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  private async generateToken(user: User) {
+  async generateToken(user: User, profileId?: number) {
     const payload = {
       email: user.email,
       id: user.id,
+      profileId,
       banned: user.banned,
       banReason: user.banReason,
       roles: user.roles,
@@ -50,6 +51,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        profileId,
         banned: user.banned,
         banReason: user.banReason,
         roles: user.roles,

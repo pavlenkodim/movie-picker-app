@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Swipe } from "./swipes.model";
 import { Movie } from "src/movies/movies.model";
@@ -32,6 +32,12 @@ export class SwipesService {
   }
 
   async getSwipedMovieIds(profileId: number): Promise<number[]> {
+    if (!profileId) {
+      throw new HttpException(
+        "You need to create a profile or refresh your token",
+        HttpStatus.FORBIDDEN,
+      );
+    }
     const swipes = await this.swipeRepository.findAll({
       where: { profileId },
       attributes: ["movieId"],
@@ -40,6 +46,12 @@ export class SwipesService {
   }
 
   async getSwipesHistory(profileId: number): Promise<Swipe[]> {
+    if (!profileId) {
+      throw new HttpException(
+        "You need to create a profile or refresh your token",
+        HttpStatus.FORBIDDEN,
+      );
+    }
     return this.swipeRepository.findAll({
       where: { profileId },
       include: [{ model: Movie, include: [{ model: Genre, through: { attributes: [] } }] }],

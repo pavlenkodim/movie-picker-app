@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { ProfileGenreWeight } from "./profile-genre-weights.model";
 
@@ -13,6 +13,12 @@ export class GenreWeightsService {
   ) {}
 
   async setInitialWeights(profileId: number, genreIds: number[]) {
+    if (!profileId) {
+      throw new HttpException(
+        "You need to create a profile or refresh your token",
+        HttpStatus.FORBIDDEN,
+      );
+    }
     const rows = genreIds.map((genreId) => ({
       profileId,
       genreId,
@@ -27,6 +33,12 @@ export class GenreWeightsService {
   }
 
   async getWeights(profileId: number) {
+    if (!profileId) {
+      throw new HttpException(
+        "You need to create a profile or refresh your token",
+        HttpStatus.FORBIDDEN,
+      );
+    }
     return this.genreWeightRepository.findAll({ where: { profileId } });
   }
 

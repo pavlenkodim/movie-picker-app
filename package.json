@@ -1,8 +1,8 @@
 {
-  "name": "backend",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "movie-picker-app",
+  "version": "0.1.0",
+  "description": "Movie picker api and logic service",
+  "author": "Dmitry Pavlenko",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

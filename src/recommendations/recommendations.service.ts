@@ -13,7 +13,7 @@ export class RecommendationsService {
     private swipesService: SwipesService,
   ) {}
 
-  async getRecommendations(profileId: number) {
+  async getRecommendations(profileId: number, limit: number = 20) {
     if (!profileId) {
       throw new HttpException(
         "You need to create a profile or refresh your token",
@@ -33,6 +33,16 @@ export class RecommendationsService {
 
     const weightsMap = Object.fromEntries(weights.map((w) => [w.genreId, Number(w.weight)]));
 
-    return this.moviesService.getCandidates(topGenreIds, weightsMap, excludeMovieIds);
+    const candidates = await this.moviesService.getCandidates(
+      topGenreIds,
+      weightsMap,
+      excludeMovieIds,
+      limit,
+    );
+
+    return {
+      data: candidates.slice(0, limit),
+      hasMore: candidates.length > limit,
+    };
   }
 }

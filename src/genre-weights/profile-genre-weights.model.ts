@@ -9,7 +9,16 @@ interface ProfileGenreWeightCreationAttrs {
   weight?: number;
 }
 
-@Table({ tableName: "profile_genre_weights" })
+@Table({
+  tableName: "profile_genre_weights",
+  indexes: [
+    {
+      unique: true,
+      fields: ["profileId", "genreId"],
+      name: "unique_profile_genre",
+    },
+  ],
+})
 export class ProfileGenreWeight extends Model<ProfileGenreWeight, ProfileGenreWeightCreationAttrs> {
   @ApiProperty({ example: 1 })
   @Column({

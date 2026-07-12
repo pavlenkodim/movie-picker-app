@@ -25,8 +25,6 @@ export default async function tmdbApiService<T>(
     : "";
 
   try {
-    console.log("url:", `${baseUrl}/${url}${queryString}`);
-
     const response = await fetch(`${baseUrl}/${url}${queryString}`, {
       method: "GET",
       headers: {
@@ -35,7 +33,6 @@ export default async function tmdbApiService<T>(
       },
     });
     const data: T = await response.json();
-    console.log("TMDB data", data);
 
     if (!response.ok) {
       const error = data as ErrorsFromTMBD;

@@ -26,5 +26,5 @@ export class Genre extends Model<Genre, GenreCreationAttr> {
   declare name: string;
 
   @BelongsToMany(() => Movie, () => MovieGenres)
-  movies: Movie[];
+  declare movies: Movie[];
 }

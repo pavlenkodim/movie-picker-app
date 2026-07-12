@@ -42,7 +42,7 @@ export class GenreWeightsService {
     return this.genreWeightRepository.findAll({ where: { profileId } });
   }
 
-  async getTopGenres(profileId: number, limit: number) {
+  async getTopGenres(profileId: number, limit?: number) {
     return this.genreWeightRepository.findAll({
       where: { profileId },
       order: [["weight", "DESC"]],
@@ -55,20 +55,25 @@ export class GenreWeightsService {
     const target = liked ? 1 : 0;
 
     await Promise.all(
-      genreIds.map(async (genreId) => {
-        await this.genreWeightRepository.bulkCreate([{ profileId, genreId, weight: 0 }], {
-          ignoreDuplicates: true,
-        });
-
-        await this.genreWeightRepository.update(
+      genreIds.map((genreId) =>
+        this.genreWeightRepository.sequelize?.query(
+          `INSERT INTO "profile_genre_weights" ("profileId", "genreId", "weight", "createdAt", "updatedAt")
+         VALUES (:profileId, :genreId, :initialWeight, NOW(), NOW())
+         ON CONFLICT ("profileId", "genreId")
+         DO UPDATE SET
+           "weight" = "profile_genre_weights"."weight" + :learningRate * (:target - "profile_genre_weights"."weight"),
+           "updatedAt" = NOW()`,
           {
-            weight: this.genreWeightRepository.sequelize?.literal(
-              `weight + ${LEARNING_RATE} * (${target} - weight)`,
-            ) as unknown as number,
+            replacements: {
+              profileId,
+              genreId,
+              initialWeight: INITIAL_WEIGHT,
+              learningRate: LEARNING_RATE,
+              target,
+            },
           },
-          { where: { profileId, genreId } },
-        );
-      }),
+        ),
+      ),
     );
   }
 }

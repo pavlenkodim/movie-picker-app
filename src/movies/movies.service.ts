@@ -5,6 +5,7 @@ import { Movie } from "./movies.model";
 import { MovieGenres } from "./movie-genres.model";
 import { Genre } from "src/genres/genres.model";
 import tmdbApiService from "src/utils/tmdbApiService";
+import { TmdbFetchProgress } from "./tmdb-fetch-progress.model";
 
 const MIN_LOCAL_POOL = 20;
 const VOTE_COUNT_THRESHOLD = 100;
@@ -36,17 +37,25 @@ export class MoviesService {
   constructor(
     @InjectModel(Movie) private movieRepository: typeof Movie,
     @InjectModel(MovieGenres) private movieGenresRepository: typeof MovieGenres,
+    @InjectModel(TmdbFetchProgress) private fetchProgressRepository: typeof TmdbFetchProgress,
   ) {}
 
   async getCandidates(
     topGenreIds: number[],
     weights: Record<number, number>,
     excludeMovieIds: number[],
+    limit: number,
   ): Promise<ScoredMovie[]> {
+    const desiredPool = Math.max(limit, MIN_LOCAL_POOL);
     let movies = await this.findLocalCandidates(topGenreIds, excludeMovieIds);
 
-    if (movies.length < MIN_LOCAL_POOL) {
-      await this.fetchAndCacheFromTMDB(topGenreIds);
+    const MAX_FETCH_ATTEMPTS = 3;
+    let attempts = 0;
+
+    while (movies.length < desiredPool && attempts < MAX_FETCH_ATTEMPTS) {
+      const fetchedMore = await this.fetchAndCacheFromTMDB(topGenreIds);
+      attempts++;
+      if (!fetchedMore) break;
       movies = await this.findLocalCandidates(topGenreIds, excludeMovieIds);
     }
 
@@ -72,15 +81,34 @@ export class MoviesService {
     });
   }
 
-  private async fetchAndCacheFromTMDB(genreIds: number[]): Promise<void> {
+  private buildGenreKey(genreIds: number[]): string {
+    return [...genreIds].sort((a, b) => a - b).join("|");
+  }
+
+  private async fetchAndCacheFromTMDB(genreIds: number[]): Promise<boolean> {
+    const genreKey = this.buildGenreKey(genreIds);
+
+    const progress = await this.fetchProgressRepository.findOne({ where: { genreKey } });
+    const nextPage = (progress?.lastPage ?? 0) + 1;
+
+    if (progress?.totalPages && nextPage > progress.totalPages) {
+      return false;
+    }
+
     const data = await tmdbApiService<TmdbDiscoverResponse>("discover/movie", {
       with_genres: genreIds.join("|"),
       "vote_count.gte": VOTE_COUNT_THRESHOLD,
       sort_by: "popularity.desc",
-      page: 1,
+      page: nextPage,
     });
 
-    if (!data.results?.length) return;
+    await this.fetchProgressRepository.upsert({
+      genreKey,
+      lastPage: nextPage,
+      totalPages: data.total_pages,
+    });
+
+    if (!data.results?.length) return false;
 
     await this.movieRepository.bulkCreate(
       data.results.map((m) => ({
@@ -113,6 +141,8 @@ export class MoviesService {
     await this.movieGenresRepository.bulkCreate(movieGenreRows, {
       ignoreDuplicates: true,
     });
+
+    return true;
   }
 
   private scoreAndSort(movies: Movie[], weights: Record<number, number>): ScoredMovie[] {

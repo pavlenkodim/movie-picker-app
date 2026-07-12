@@ -57,5 +57,5 @@ export class Movie extends Model<Movie, MovieCreationAttrs> {
   declare releaseDate?: string | null;
 
   @BelongsToMany(() => Genre, () => MovieGenres)
-  genres: Genre[];
+  declare genres: Genre[];
 }

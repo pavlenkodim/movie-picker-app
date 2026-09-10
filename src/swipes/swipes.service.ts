@@ -5,6 +5,7 @@ import { Movie } from "src/movies/movies.model";
 import { Genre } from "src/genres/genres.model";
 import { GenreWeightsService } from "src/genre-weights/genre-weights.service";
 import { CreateSwipeDto } from "./dto/create-swipes.dto";
+import { Op } from "sequelize";
 
 @Injectable()
 export class SwipesService {
@@ -45,17 +46,29 @@ export class SwipesService {
     return swipes.map((s) => s.movieId);
   }
 
-  async getSwipesHistory(profileId: number): Promise<Swipe[]> {
+  async getSwipesHistory(
+    profileId: number,
+    limit: number = 20,
+    cursor?: number,
+  ): Promise<{ data: Swipe[]; meta: { nextCursor: number | null; hasMore: boolean } }> {
     if (!profileId) {
       throw new HttpException(
         "You need to create a profile or refresh your token",
         HttpStatus.FORBIDDEN,
       );
     }
-    return this.swipeRepository.findAll({
-      where: { profileId },
+
+    const rows = await this.swipeRepository.findAll({
+      where: { profileId, ...(cursor ? { id: { [Op.lt]: cursor } } : {}) },
       include: [{ model: Movie, include: [{ model: Genre, through: { attributes: [] } }] }],
       order: [["createdAt", "DESC"]],
+      limit: limit + 1,
     });
+
+    const hasMore = rows.length > limit;
+    const data = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+    return { data, meta: { nextCursor, hasMore } };
   }
 }

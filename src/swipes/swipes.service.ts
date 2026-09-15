@@ -71,4 +71,16 @@ export class SwipesService {
 
     return { data, meta: { nextCursor, hasMore } };
   }
+
+  async getSingleSwipe(swipeId: number): Promise<Swipe> {
+    const swipe = await this.swipeRepository.findByPk(swipeId, {
+      include: [{ model: Movie, include: [{ model: Genre, through: { attributes: [] } }] }],
+    });
+
+    if (!swipe) {
+      throw new NotFoundException(`Swipe ${swipeId} not found`);
+    }
+
+    return swipe;
+  }
 }

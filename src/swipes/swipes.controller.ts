@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Req, Query } from "@nestjs/common";
+import { Body, Controller, Post, Get, Req, Query, Param } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { SwipesService } from "./swipes.service";
 import { Swipe } from "./swipes.model";
@@ -20,6 +20,13 @@ export class SwipesController {
   @Get()
   getHistory(@Req() req, @Query() query: GetSwipesHistoryDto) {
     return this.swipesService.getSwipesHistory(req.user.profileId, query.limit, query.cursor);
+  }
+
+  @ApiOperation({ summary: "Get a single swipe by ID" })
+  @ApiResponse({ status: 200, type: Swipe })
+  @Get("/:swipeId")
+  getHistoryById(@Param("swipeId") swipeId: number) {
+    return this.swipesService.getSingleSwipe(swipeId);
   }
 
   @ApiOperation({ summary: "Record a swipe" })

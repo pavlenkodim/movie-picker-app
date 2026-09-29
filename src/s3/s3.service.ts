@@ -44,7 +44,11 @@ export class S3Service {
   }
 
   async deleteFile(url: string): Promise<void> {
-    const key = url.split(".amazonaws.com/")[1];
+    // Skip external URLs (e.g. Google avatars) that are not stored in our bucket
+    const prefix = `https://${this.bucket}.s3.${this.region}.amazonaws.com/`;
+    if (!url.startsWith(prefix)) return;
+
+    const key = url.slice(prefix.length);
     if (!key) return;
 
     await this.client.send(

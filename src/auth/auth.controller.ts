@@ -1,6 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CreateUserDto } from "../users/dto/create-user.dto";
+import { GoogleAuthDto } from "./dto/google-auth.dto";
 import { AuthService } from "./auth.service";
 import { Public } from "./public.decorator";
 
@@ -23,5 +24,13 @@ export class AuthController {
   @Post("/registration")
   registration(@Body() userDto: CreateUserDto) {
     return this.authService.registration(userDto);
+  }
+
+  @Public()
+  @ApiOperation({ summary: "Login or registration via Google ID token" })
+  @ApiResponse({ status: 200, type: Object })
+  @Post("/google")
+  google(@Body() dto: GoogleAuthDto) {
+    return this.authService.googleLogin(dto);
   }
 }

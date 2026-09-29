@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
+import { Transaction } from "sequelize";
 
 import { User } from "./users.model";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -14,11 +15,14 @@ export class UsersService {
     private roleService: RolesService,
   ) {}
 
-  async createUser(dto: CreateUserDto) {
-    const user = await this.userRepository.create(dto);
+  async createUser(
+    dto: CreateUserDto | { email: string; googleId: string },
+    transaction?: Transaction,
+  ) {
+    const user = await this.userRepository.create(dto, { transaction });
     const role = await this.roleService.getRoleByValue("USER");
     if (role) {
-      await user.$set("roles", [role.id]);
+      await user.$set("roles", [role.id], { transaction });
       user.roles = [role];
     }
     return user;
@@ -31,6 +35,14 @@ export class UsersService {
 
   async getUserByEmail(email: string) {
     const user = await this.userRepository.findOne({ where: { email }, include: { all: true } });
+    return user;
+  }
+
+  async getUserByGoogleId(googleId: string) {
+    const user = await this.userRepository.findOne({
+      where: { googleId },
+      include: { all: true },
+    });
     return user;
   }
 

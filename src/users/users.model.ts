@@ -6,7 +6,8 @@ import { Profile } from "src/profiles/profiles.model";
 
 interface UserCreationAttrs {
   email: string;
-  password: string;
+  password?: string;
+  googleId?: string;
 }
 
 @Table({
@@ -26,9 +27,19 @@ export class User extends Model<User, UserCreationAttrs> {
   @Column({ type: DataType.STRING, unique: true, allowNull: false })
   declare email: string;
 
-  @ApiProperty({ example: "Qwerty123!", description: "User password" })
-  @Column({ type: DataType.STRING, allowNull: false })
-  declare password: string;
+  @ApiProperty({
+    example: "Qwerty123!",
+    description: "User password (null for Google-only accounts)",
+  })
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare password: string | null;
+
+  @ApiProperty({
+    example: "109876543210987654321",
+    description: "Google account ID (sub claim)",
+  })
+  @Column({ type: DataType.STRING, unique: true, allowNull: true })
+  declare googleId: string | null;
 
   @ApiProperty({ example: false, description: "User ban status" })
   @Column({ type: DataType.BOOLEAN, defaultValue: false })

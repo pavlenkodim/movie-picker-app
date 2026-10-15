@@ -1,5 +1,5 @@
-import { IsOptional, IsInt, Min, Max } from "class-validator";
-import { Type } from "class-transformer";
+import { IsOptional, IsInt, Min, Max, IsBoolean } from "class-validator";
+import { Type, Transform } from "class-transformer";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 
 export class GetSwipesHistoryDto {
@@ -17,4 +17,10 @@ export class GetSwipesHistoryDto {
   @IsInt()
   @Min(1)
   cursor?: number;
+
+  @ApiPropertyOptional({ description: "Filter by liked swipes" })
+  @IsOptional()
+  @Transform(({ value }) => (value === "true" ? true : value === "false" ? false : value))
+  @IsBoolean()
+  liked?: boolean;
 }

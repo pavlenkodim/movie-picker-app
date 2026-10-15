@@ -50,6 +50,7 @@ export class SwipesService {
     profileId: number,
     limit: number = 20,
     cursor?: number,
+    liked?: boolean,
   ): Promise<{ data: Swipe[]; meta: { nextCursor: number | null; hasMore: boolean } }> {
     if (!profileId) {
       throw new HttpException(
@@ -59,7 +60,11 @@ export class SwipesService {
     }
 
     const rows = await this.swipeRepository.findAll({
-      where: { profileId, ...(cursor ? { id: { [Op.lt]: cursor } } : {}) },
+      where: {
+        profileId,
+        ...(liked !== undefined ? { liked } : {}),
+        ...(cursor ? { id: { [Op.lt]: cursor } } : {}),
+      },
       include: [{ model: Movie, include: [{ model: Genre, through: { attributes: [] } }] }],
       order: [["createdAt", "DESC"]],
       limit: limit + 1,

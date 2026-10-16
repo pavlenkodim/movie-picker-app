@@ -19,7 +19,12 @@ export class SwipesController {
   })
   @Get()
   getHistory(@Req() req, @Query() query: GetSwipesHistoryDto) {
-    return this.swipesService.getSwipesHistory(req.user.profileId, query.limit, query.cursor);
+    return this.swipesService.getSwipesHistory(
+      req.user.profileId,
+      query.limit,
+      query.cursor,
+      query.liked,
+    );
   }
 
   @ApiOperation({ summary: "Get a single swipe by ID" })

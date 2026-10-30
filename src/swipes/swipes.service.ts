@@ -3,9 +3,20 @@ import { InjectModel } from "@nestjs/sequelize";
 import { Swipe } from "./swipes.model";
 import { Movie } from "src/movies/movies.model";
 import { Genre } from "src/genres/genres.model";
+import { Person } from "src/persons/persons.model";
+import { MovieCast } from "src/movies/movie-cast.model";
 import { GenreWeightsService } from "src/genre-weights/genre-weights.service";
 import { CreateSwipeDto } from "./dto/create-swipes.dto";
-import { Op } from "sequelize";
+import { Op, OrderItem } from "sequelize";
+
+// Movie default scope can't order cast inside a nested include
+const CAST_ORDER: OrderItem = [
+  { model: Movie, as: "movie" },
+  { model: Person, as: "cast" },
+  MovieCast,
+  "order",
+  "ASC",
+];
 
 @Injectable()
 export class SwipesService {
@@ -16,7 +27,7 @@ export class SwipesService {
   ) {}
 
   async createSwipe(profileId: number, dto: CreateSwipeDto): Promise<Swipe> {
-    const movie = await this.movieRepository.findByPk(dto.movieId, {
+    const movie = await this.movieRepository.unscoped().findByPk(dto.movieId, {
       include: [{ model: Genre, through: { attributes: [] } }],
     });
 
@@ -65,8 +76,8 @@ export class SwipesService {
         ...(liked !== undefined ? { liked } : {}),
         ...(cursor ? { id: { [Op.lt]: cursor } } : {}),
       },
-      include: [{ model: Movie, include: [{ model: Genre, through: { attributes: [] } }] }],
-      order: [["createdAt", "DESC"]],
+      include: [Movie],
+      order: [["createdAt", "DESC"], CAST_ORDER],
       limit: limit + 1,
     });
 
@@ -79,7 +90,8 @@ export class SwipesService {
 
   async getSingleSwipe(swipeId: number): Promise<Swipe> {
     const swipe = await this.swipeRepository.findByPk(swipeId, {
-      include: [{ model: Movie, include: [{ model: Genre, through: { attributes: [] } }] }],
+      include: [Movie],
+      order: [CAST_ORDER],
     });
 
     if (!swipe) {

@@ -1,7 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { BelongsToMany, Column, DataType, Model, Table } from "sequelize-typescript";
+import {
+  BelongsToMany,
+  Column,
+  DataType,
+  DefaultScope,
+  HasMany,
+  Model,
+  Table,
+} from "sequelize-typescript";
 import { Genre } from "src/genres/genres.model";
 import { MovieGenres } from "./movie-genres.model";
+import { Person } from "src/persons/persons.model";
+import { MovieCast } from "./movie-cast.model";
+import { Company } from "src/companies/companies.model";
+import { MovieCompanies } from "./movie-companies.model";
+import { MovieTranslation } from "./movie-translations.model";
 
 interface MovieCreationAttrs {
   id: number;
@@ -14,6 +27,17 @@ interface MovieCreationAttrs {
   releaseDate?: string | null;
 }
 
+// Every movie comes with genres, cast and companies, also when included from other models.
+// Internal queries that need only ids or a light pool use Movie.unscoped().
+// Cast order applies only to top-level queries, nested ones have to order it themselves.
+@DefaultScope(() => ({
+  include: [
+    { model: Genre, through: { attributes: [] } },
+    { model: Person, through: { attributes: [] } },
+    { model: Company, through: { attributes: [] } },
+  ],
+  order: [[{ model: Person, as: "cast" }, MovieCast, "order", "ASC"]],
+}))
 @Table({ tableName: "movies" })
 export class Movie extends Model<Movie, MovieCreationAttrs> {
   @ApiProperty({ example: 640146, description: "Unique movie ID" })
@@ -56,6 +80,37 @@ export class Movie extends Model<Movie, MovieCreationAttrs> {
   @Column({ type: DataType.DATEONLY, allowNull: true })
   declare releaseDate?: string | null;
 
+  @ApiProperty({ example: ["US"], description: "Production countries (ISO 3166-1)" })
+  @Column({ type: DataType.ARRAY(DataType.STRING(2)), allowNull: true })
+  declare productionCountries?: string[] | null;
+
+  @ApiProperty({ example: "Released", description: "Release status" })
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare status?: string | null;
+
+  @ApiProperty({ example: "ZlNFpri-Y40", description: "YouTube key of the official English trailer" })
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare trailerKey?: string | null;
+
+  // NULL means details were not fetched from TMDB yet
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare detailsFetchedAt?: Date | null;
+
+  // Failed fetch attempts, movies over the limit are skipped by the worker
+  @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 0 })
+  declare detailsAttempts: number;
+
   @BelongsToMany(() => Genre, () => MovieGenres)
   declare genres: Genre[];
+
+  @ApiProperty({ type: () => [Person], description: "Top billed actors, lead role first" })
+  @BelongsToMany(() => Person, () => MovieCast)
+  declare cast: Person[];
+
+  @ApiProperty({ type: () => [Company], description: "Production companies" })
+  @BelongsToMany(() => Company, () => MovieCompanies)
+  declare companies: Company[];
+
+  @HasMany(() => MovieTranslation)
+  declare translations: MovieTranslation[];
 }

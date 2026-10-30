@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { GenreWeightsService } from "src/genre-weights/genre-weights.service";
 import { MoviesService } from "src/movies/movies.service";
+import { MovieDetailsService } from "src/movies/movie-details.service";
 import { SwipesService } from "src/swipes/swipes.service";
 
 const TOP_GENRES_LIMIT = 3;
@@ -10,6 +11,7 @@ export class RecommendationsService {
   constructor(
     private genreWeightsService: GenreWeightsService,
     private moviesService: MoviesService,
+    private movieDetailsService: MovieDetailsService,
     private swipesService: SwipesService,
   ) {}
 
@@ -40,8 +42,20 @@ export class RecommendationsService {
       limit,
     );
 
+    const page = candidates.slice(0, limit);
+    const pageIds = page.map(({ movie }) => movie.id);
+
+    // Fetch TMDB details only for the movies the user is about to see
+    await this.movieDetailsService.enrichPending(pageIds);
+
+    // Candidates are a light unscoped pool, so load the page with full details
+    const detailed = new Map(
+      (await this.moviesService.findByIds(pageIds)).map((movie) => [movie.id, movie]),
+    );
+    const data = page.map(({ movie, score }) => ({ movie: detailed.get(movie.id) ?? movie, score }));
+
     return {
-      data: candidates.slice(0, limit),
+      data,
       hasMore: candidates.length > limit,
     };
   }

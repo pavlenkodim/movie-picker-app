@@ -39,13 +39,16 @@ import { RecommendationsModule } from "./recommendations/recommendations.module"
       database: process.env.POSTGRES_DB,
       models: [User, Role, UserRoles, Profile],
       autoLoadModels: true,
-      ssl: true,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
+      // SSL is on unless POSTGRES_SSL=false (local docker postgres has no SSL)
+      ...(process.env.POSTGRES_SSL !== "false" && {
+        ssl: true,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
         },
-      },
+      }),
     }),
     AuthModule,
     UsersModule,

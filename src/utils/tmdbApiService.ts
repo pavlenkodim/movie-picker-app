@@ -6,6 +6,12 @@ interface ErrorsFromTMBD {
   success: boolean;
 }
 
+const MAX_RETRIES = 3;
+const DEFAULT_RETRY_DELAY_MS = 1000;
+const REQUEST_TIMEOUT_MS = 10_000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default async function tmdbApiService<T>(
   url: string,
   params?: Record<string, string | number | boolean>,
@@ -24,24 +30,38 @@ export default async function tmdbApiService<T>(
     ? "?" + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString()
     : "";
 
-  try {
-    const response = await fetch(`${baseUrl}/${url}${queryString}`, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data: T = await response.json();
+  for (let attempt = 0; ; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch(`${baseUrl}/${url}${queryString}`, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        // Don't let a hanging TMDB request hang the user request
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      console.error(error);
+      throw new HttpException(`Service unavailable: ${error}`, HttpStatus.SERVICE_UNAVAILABLE);
+    }
 
+    // Rate limited: wait as long as TMDB asks and try again
+    if (response.status === HttpStatus.TOO_MANY_REQUESTS && attempt < MAX_RETRIES) {
+      const retryAfterSec = Number(response.headers.get("retry-after"));
+      await sleep(retryAfterSec > 0 ? retryAfterSec * 1000 : DEFAULT_RETRY_DELAY_MS);
+      continue;
+    }
+
+    const data = await response.json().catch(() => null);
+
+    // Keep the original status so callers can tell 404 from 429 etc.
     if (!response.ok) {
-      const error = data as ErrorsFromTMBD;
-      throw new HttpException(error.status_message ?? "TMDB request failed", response.status);
+      const error = data as ErrorsFromTMBD | null;
+      throw new HttpException(error?.status_message ?? "TMDB request failed", response.status);
     }
 
     return data as T;
-  } catch (error) {
-    console.error(error);
-    throw new HttpException(`Service unavailable: ${error}`, HttpStatus.SERVICE_UNAVAILABLE);
   }
 }

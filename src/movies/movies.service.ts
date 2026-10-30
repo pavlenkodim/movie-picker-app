@@ -62,11 +62,17 @@ export class MoviesService {
     return this.scoreAndSort(movies, weights);
   }
 
+  async findByIds(movieIds: number[]): Promise<Movie[]> {
+    if (!movieIds.length) return [];
+    return this.movieRepository.findAll({ where: { id: { [Op.in]: movieIds } } });
+  }
+
   private async findLocalCandidates(
     genreIds: number[],
     excludeMovieIds: number[],
   ): Promise<Movie[]> {
-    return this.movieRepository.findAll({
+    // Unscoped: the pool can be large and needs only matched genres for scoring
+    return this.movieRepository.unscoped().findAll({
       where: {
         voteCount: { [Op.gte]: VOTE_COUNT_THRESHOLD },
         ...(excludeMovieIds.length && { id: { [Op.notIn]: excludeMovieIds } }),

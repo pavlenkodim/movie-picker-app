@@ -42,16 +42,17 @@ export class RecommendationsService {
       limit,
     );
 
-    const data = candidates.slice(0, limit);
+    const page = candidates.slice(0, limit);
+    const pageIds = page.map(({ movie }) => movie.id);
 
     // Fetch TMDB details only for the movies the user is about to see
-    const { enrichedIds } = await this.movieDetailsService.enrichPending(
-      data.map(({ movie }) => movie.id),
+    await this.movieDetailsService.enrichPending(pageIds);
+
+    // Candidates are a light unscoped pool, so load the page with full details
+    const detailed = new Map(
+      (await this.moviesService.findByIds(pageIds)).map((movie) => [movie.id, movie]),
     );
-    const enriched = new Set(enrichedIds);
-    await Promise.all(
-      data.filter(({ movie }) => enriched.has(movie.id)).map(({ movie }) => movie.reload()),
-    );
+    const data = page.map(({ movie, score }) => ({ movie: detailed.get(movie.id) ?? movie, score }));
 
     return {
       data,

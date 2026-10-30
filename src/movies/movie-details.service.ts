@@ -110,7 +110,7 @@ export class MovieDetailsService {
 
     if (movieIds) {
       if (!movieIds.length) return { enrichedIds: [], failed: 0 };
-      const movies = await this.movieRepository.findAll({
+      const movies = await this.movieRepository.unscoped().findAll({
         attributes: ["id"],
         where: { [Op.and]: [{ id: { [Op.in]: movieIds } }, this.pendingWhere(languages)] },
       });
@@ -130,7 +130,7 @@ export class MovieDetailsService {
 
       const total: EnrichResult = { enrichedIds: [], failed: 0 };
       for (;;) {
-        const movies = await this.movieRepository.findAll({
+        const movies = await this.movieRepository.unscoped().findAll({
           attributes: ["id"],
           where: this.pendingWhere(languages),
           order: [["popularity", "DESC"]],

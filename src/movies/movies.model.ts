@@ -1,5 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { BelongsToMany, Column, DataType, HasMany, Model, Table } from "sequelize-typescript";
+import {
+  BelongsToMany,
+  Column,
+  DataType,
+  DefaultScope,
+  HasMany,
+  Model,
+  Table,
+} from "sequelize-typescript";
 import { Genre } from "src/genres/genres.model";
 import { MovieGenres } from "./movie-genres.model";
 import { Person } from "src/persons/persons.model";
@@ -19,6 +27,17 @@ interface MovieCreationAttrs {
   releaseDate?: string | null;
 }
 
+// Every movie comes with genres, cast and companies, also when included from other models.
+// Internal queries that need only ids or a light pool use Movie.unscoped().
+// Cast order applies only to top-level queries, nested ones have to order it themselves.
+@DefaultScope(() => ({
+  include: [
+    { model: Genre, through: { attributes: [] } },
+    { model: Person, through: { attributes: [] } },
+    { model: Company, through: { attributes: [] } },
+  ],
+  order: [[{ model: Person, as: "cast" }, MovieCast, "order", "ASC"]],
+}))
 @Table({ tableName: "movies" })
 export class Movie extends Model<Movie, MovieCreationAttrs> {
   @ApiProperty({ example: 640146, description: "Unique movie ID" })
@@ -84,9 +103,11 @@ export class Movie extends Model<Movie, MovieCreationAttrs> {
   @BelongsToMany(() => Genre, () => MovieGenres)
   declare genres: Genre[];
 
+  @ApiProperty({ type: () => [Person], description: "Top billed actors, lead role first" })
   @BelongsToMany(() => Person, () => MovieCast)
   declare cast: Person[];
 
+  @ApiProperty({ type: () => [Company], description: "Production companies" })
   @BelongsToMany(() => Company, () => MovieCompanies)
   declare companies: Company[];
 
